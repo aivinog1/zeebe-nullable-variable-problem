@@ -22,6 +22,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Map;
+
 public class ProcessTest {
 
   @Rule public ZeebeTestRule testRule = new ZeebeTestRule();
@@ -36,16 +38,41 @@ public class ProcessTest {
   }
 
   @Test
-  public void shouldCompleteProcessInstance() {
+  public void shouldCompleteWithNonnullVariable() {
     final ProcessInstanceEvent processInstance =
-        client.newCreateInstanceCommand().bpmnProcessId("process").latestVersion().send().join();
+            client
+                    .newCreateInstanceCommand()
+                    .bpmnProcessId("process-with-nullable-variable")
+                    .latestVersion()
+                    .variables(Map.of("var", "NONNULL"))
+                    .send().join();
 
-    client
-        .newWorker()
-        .jobType("task")
-        .handler((c, t) -> c.newCompleteCommand(t.getKey()).send().join())
-        .open();
-
-    ZeebeTestRule.assertThat(processInstance).isEnded().hasPassed("start", "task", "end");
+    ZeebeTestRule.assertThat(processInstance).isEnded().hasPassed("start", "variable_gateway", "end_nonnull");
   }
+
+  @Test
+  public void shouldCompleteWithNullableVariable() {
+    final ProcessInstanceEvent processInstance =
+            client
+                    .newCreateInstanceCommand()
+                    .bpmnProcessId("process-with-nullable-variable")
+                    .latestVersion()
+                    .variables(Map.of("var", "NULLABLE"))
+                    .send().join();
+
+    ZeebeTestRule.assertThat(processInstance).isEnded().hasPassed("start", "variable_gateway", "end_nullable");
+  }
+
+  @Test
+  public void shouldCompleteWithNullVariable() {
+    final ProcessInstanceEvent processInstance =
+            client
+                    .newCreateInstanceCommand()
+                    .bpmnProcessId("process-with-nullable-variable")
+                    .latestVersion()
+                    .send().join();
+
+    ZeebeTestRule.assertThat(processInstance).isEnded().hasPassed("start", "variable_gateway", "end_nullable");
+  }
+
 }
