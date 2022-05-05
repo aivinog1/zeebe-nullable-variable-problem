@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.Map;
 
 public class ProcessTest {
@@ -34,7 +35,7 @@ public class ProcessTest {
   public void deploy() {
     client = testRule.getClient();
 
-    client.newDeployCommand().addResourceFromClasspath("process.bpmn").send().join();
+    client.newDeployCommand().addResourceFromClasspath("process.bpmn").requestTimeout(Duration.ofSeconds(20)).send().join();
   }
 
   @Test
@@ -45,6 +46,7 @@ public class ProcessTest {
                     .bpmnProcessId("process-with-nullable-variable")
                     .latestVersion()
                     .variables(Map.of("var", "NONNULL"))
+                    .requestTimeout(Duration.ofSeconds(20))
                     .send().join();
 
     ZeebeTestRule.assertThat(processInstance).isEnded().hasPassed("start", "variable_gateway", "end_nonnull");
@@ -58,6 +60,7 @@ public class ProcessTest {
                     .bpmnProcessId("process-with-nullable-variable")
                     .latestVersion()
                     .variables(Map.of("var", "NULLABLE"))
+                    .requestTimeout(Duration.ofSeconds(20))
                     .send().join();
 
     ZeebeTestRule.assertThat(processInstance).isEnded().hasPassed("start", "variable_gateway", "end_nullable");
@@ -70,6 +73,7 @@ public class ProcessTest {
                     .newCreateInstanceCommand()
                     .bpmnProcessId("process-with-nullable-variable")
                     .latestVersion()
+                    .requestTimeout(Duration.ofSeconds(20))
                     .send().join();
 
     ZeebeTestRule.assertThat(processInstance).isEnded().hasPassed("start", "variable_gateway", "end_nullable");
